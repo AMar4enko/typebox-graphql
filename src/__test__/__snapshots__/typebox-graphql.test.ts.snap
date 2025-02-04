@@ -1,0 +1,29 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Schema compilation it works 1`] = `
+"input UpdateUserPayload {
+  email: String!
+}
+
+type User implements Likeable {
+  id: String
+  createdAt: DateFromString
+  email: String
+  subscribers: [String]
+  likes: Int
+}
+
+scalar DateFromString
+
+interface Likeable {
+  likes: Int
+}
+
+type Query {
+  getUser(id: String!): User
+}
+
+type Mutation {
+  updateUser(id: String!, payload: UpdateUserPayload!): User
+}"
+`;
