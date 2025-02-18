@@ -3,12 +3,7 @@
  * both side schemas, not only input side
  */
 
-import type {
-  SchemaOptions,
-  TSchema,
-  TTransform,
-  TransformOptions,
-} from '@sinclair/typebox'
+import type { SchemaOptions, TSchema, TTransform } from '@sinclair/typebox'
 import { Clone, CloneType, Transform } from '@sinclair/typebox/type'
 
 import type { Static, StaticDecode } from '@sinclair/typebox'
@@ -20,8 +15,7 @@ export const AltTransformKind: unique symbol = Symbol(
 export interface TAltTransform<
   I extends TSchema = TSchema, // I stands for Schema on the input side
   A extends TSchema = TSchema, // A stands for Schema on the output side
-> extends TTransform<I, Static<A>> {
-  // static: TransformStatic<A, this['params']>
+> extends TTransform<A, never> {
   [AltTransformKind]: I
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [key: string]: any

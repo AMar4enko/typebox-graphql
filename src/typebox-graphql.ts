@@ -278,21 +278,24 @@ export declare namespace SchemaRegistry {
     RegisteredTypes extends ResolvableType,
     Ctx = never,
     Root extends T.TObject = never,
+    IsSubscription extends boolean = false,
   > = (
     root: [Root] extends [never] ? never : T.Static<Root>,
     args: FieldArgs<S>,
     ctx: Ctx,
     info: GraphQLResolveInfo,
-  ) =>
-    | ExpandedResultType<S, RegisteredTypes>
-    | Promise<ExpandedResultType<S, RegisteredTypes>>
+  ) => IsSubscription extends true
+    ? AsyncIterableIterator<ExpandedResultType<S, RegisteredTypes>>
+    :
+        | ExpandedResultType<S, RegisteredTypes>
+        | Promise<ExpandedResultType<S, RegisteredTypes>>
 
   type SchemaResolverFunction<R, Key extends UnresolvedKey<R>> = [R] extends [
     SchemaRegistry<
       infer Type,
       infer Query,
       infer Mutation,
-      infer _Subscription,
+      infer Subscription,
       infer _Resolver,
       infer Ctx
     >,
@@ -323,7 +326,18 @@ export declare namespace SchemaRegistry {
                 Type[keyof Type],
                 Ctx
               >
-            : never
+            : [TypeName, FieldName] extends [
+                  `Subscription`,
+                  SafeKey<Subscription['properties']>,
+                ]
+              ? ResolverFunction<
+                  Subscription['properties'][FieldName],
+                  Type[keyof Type],
+                  Ctx,
+                  never,
+                  true
+                >
+              : never
       : never
     : never
 }
@@ -346,10 +360,7 @@ export interface SchemaRegistry<
   readonly type: Map<string, GraphQL.Object>
   readonly query: Query
   readonly mutation: Mutation
-  readonly subscription: Map<
-    keyof Subscription,
-    Subscription[keyof Subscription]
-  >
+  readonly subscription: Subscription
   readonly resolver: Map<keyof Resolver, Resolver[keyof Resolver]>
 
   compile: () => GraphQLSchema
@@ -439,6 +450,7 @@ function createProto(r: SchemaRegistry) {
         addType,
         setQuery: withOperation(`query`),
         setMutation: withOperation(`mutation`),
+        setSubscription: withOperation(`subscription`),
         resolve,
         compile,
       }),
@@ -450,9 +462,6 @@ function createProto(r: SchemaRegistry) {
 export const empty = (): SchemaRegistry<never, never, never, never, never> => {
   const obj = createProto({
     type: new Map(),
-    query: new Map(),
-    mutation: new Map(),
-    subscription: new Map(),
     resolver: new Map(),
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   } as any)
@@ -509,6 +518,27 @@ function compile(this: SchemaRegistry<any, any, any, any, any, any>) {
     }),
   ]
   const types = c.getNamedTypes()
+
+  const subscriptionObj: T.TObject<{ [key in string]: GraphQL.Object }> =
+    this.subscription ?? T.Object({})
+
+  const subscription = [
+    ...Object.entries(subscriptionObj.properties).map(([key, type]) => {
+      return [
+        key,
+        {
+          type: c.compileAsOutputType(type),
+          args: IsFieldWithArgs(type)
+            ? c.compilePropertiesAsArgs(type[Kind.FieldWithArgs])
+            : {},
+          description: type.description,
+          resolve: this.resolver.get(`Subscription.${String(key)}`),
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        } satisfies GraphQLFieldConfig<any, any, any>,
+      ]
+    }),
+  ]
+
   return new GraphQLSchema({
     types,
     query:
@@ -523,6 +553,13 @@ function compile(this: SchemaRegistry<any, any, any, any, any, any>) {
         ? new GraphQLObjectType({
             name: `Mutation`,
             fields: Object.fromEntries([...mutation]),
+          })
+        : undefined,
+    subscription:
+      subscription.length > 0
+        ? new GraphQLObjectType({
+            name: `Subscription`,
+            fields: Object.fromEntries([...subscription]),
           })
         : undefined,
   })

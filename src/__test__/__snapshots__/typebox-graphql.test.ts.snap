@@ -6,24 +6,28 @@ exports[`Schema compilation it works 1`] = `
 }
 
 type User implements Likeable {
-  id: String
-  createdAt: DateFromString
-  email: String
-  subscribers: [String]
-  likes: Int
+  id: ID!
+  createdAt: DateFromString!
+  email: String!
+  subscribers: [String!]!
+  likes: Int!
 }
 
 scalar DateFromString
 
 interface Likeable {
-  likes: Int
+  likes: Int!
 }
 
 type Query {
-  getUser(id: String!): User
+  getUser(id: ID!): User!
 }
 
 type Mutation {
-  updateUser(id: String!, payload: UpdateUserPayload!): User
+  updateUser(id: ID!, payload: UpdateUserPayload!): User!
+}
+
+type Subscription {
+  userUpdates(id: ID!): User!
 }"
 `;

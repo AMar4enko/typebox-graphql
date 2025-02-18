@@ -12,6 +12,7 @@ import {
   GraphQLEnumType,
   type GraphQLFieldConfigArgumentMap,
   GraphQLFloat,
+  GraphQLID,
   type GraphQLInputFieldConfig,
   GraphQLInputObjectType,
   type GraphQLInputType,
@@ -39,6 +40,7 @@ import * as Kind from '../kind.ts'
 import {
   type GraphQL,
   IsFieldWithArgs,
+  IsID,
   IsInterface,
   IsObject,
 } from '../types.ts'
@@ -114,8 +116,10 @@ export class Compiler {
         new GraphQLScalarType({
           name: $id,
           description: s.description,
-          serialize: s[TransformKind].Encode,
-          parseValue: s[TransformKind].Decode,
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          serialize: s[TransformKind].Encode as any,
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          parseValue: s[TransformKind].Decode as any,
         }),
     )
   }
@@ -203,6 +207,8 @@ export class Compiler {
       /**
        * For an average schema, it's simple
        */
+      case IsID(s):
+        return GraphQLID
       case tg.IsInteger(s):
         return GraphQLInt
       case tg.IsString(s):
@@ -338,7 +344,7 @@ export class Compiler {
 
     const t = this.compileGraphqlScalar(s) ?? compileOutputSpecific()
 
-    return t
+    return tg.IsOptional(s) ? t : new GraphQLNonNull(t)
   }
 
   public getNamedTypes(): GraphQLNamedType[] {
