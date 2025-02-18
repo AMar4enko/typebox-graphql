@@ -35,8 +35,6 @@ const DateFromString = AltTransform(T.String(), T.Date(), {
   $id: `DateFromString`,
 })
 
-type A = T.Static<typeof DateFromString>
-
 const Likeable = Interface(`Likeable`, {
   likes: T.Integer(),
 })
@@ -59,16 +57,16 @@ const UpdateUserPayload = T.Object(
   { $id: `UpdateUserPayload` },
 )
 
-const Query = T.Object({
-  getUser: FieldWithArgs(User, { id: ID() }),
-})
-
 const Mutation = T.Object({
   updateUser: FieldWithArgs(User, { id: ID(), payload: UpdateUserPayload }),
 })
 
 const Subscription = T.Object({
   userUpdates: FieldWithArgs(User, { id: ID() }),
+})
+
+const Query = T.Object({
+  getUser: FieldWithArgs(User, { id: ID() }),
 })
 
 const reg = empty()

@@ -15,10 +15,12 @@ export const Enum: unique symbol = Symbol(
 )
 
 export const FieldWithArgs: unique symbol = Symbol(
-  '@amar4enko/typebox-graphql/symbols/FieldWithArgs',
+  '@amar4enko/typebox-graphql/symbols/FieldWithArgsKind',
 )
 
-export const ID: unique symbol = Symbol('@amar4enko/typebox-graphql/symbols/ID')
+export const ID: unique symbol = Symbol(
+  '@amar4enko/typebox-graphql/symbols/IDKind',
+)
 
 export declare namespace Kind {
   type Object = typeof Object

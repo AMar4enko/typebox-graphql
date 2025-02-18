@@ -91,7 +91,7 @@ const InterfaceC = Interface(
   { extends: [InterfaceB] },
 )
 
-const InterfaceD = Interface('InterfaceC', {
+const InterfaceD = Interface('InterfaceD', {
   d: T.String(),
 })
 
