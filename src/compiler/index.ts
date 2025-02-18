@@ -36,8 +36,12 @@ import {
   type TAltTransform,
 } from '../alt-transform.ts'
 import * as Kind from '../kind.ts'
-import { GraphQLFieldWithArgsKind, IsWithArgs } from '../old/field.ts'
-import { type GraphQL, IsInterface, IsObject } from '../types.ts'
+import {
+  type GraphQL,
+  IsFieldWithArgs,
+  IsInterface,
+  IsObject,
+} from '../types.ts'
 import {
   MissingIdError,
   NotImplementedError,
@@ -169,7 +173,7 @@ export class Compiler {
 
   protected compileFieldArgs(s: TSchema): GraphQLFieldConfigArgumentMap {
     return (
-      IsWithArgs(s) ? Object.entries(s[GraphQLFieldWithArgsKind]) : []
+      IsFieldWithArgs(s) ? Object.entries(s[Kind.FieldWithArgs]) : []
     ).reduce((acc, [name, schema]) => {
       acc[name] = {
         type: this.visitAsInputType(schema),
